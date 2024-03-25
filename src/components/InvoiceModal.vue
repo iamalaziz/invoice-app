@@ -5,7 +5,9 @@
         class="invoice-wrap flex flex-column"
     >
         <form @submit.prevent="submitForm" class="invoice-content">
-            <h1>New Invoice</h1>
+            <Loading v-if="loading" />
+            <h1 v-if="!editInvoice">New Invoice</h1>
+            <h1 v-else>Edit Invoice</h1>
             <!-- Bill From -->
             <div class="bill-from flex flex-column">
                 <h4 class>Bill From</h4>
@@ -193,14 +195,29 @@
             <!-- Save/Exit Buttons -->
             <div class="save flex">
                 <div class="left">
-                    <button @click="closeInvoice" class="red">Cancel</button>
+                    <button type="button" @click="closeInvoice" class="red">
+                        Cancel
+                    </button>
                 </div>
                 <div class="right flex">
-                    <button @click="saveDraft" type="submit" class="dark-purple">
+                    <button
+                        v-if="!editInvoice"
+                        @click="saveDraft"
+                        type="submit"
+                        class="dark-purple"
+                    >
                         Save Draft
                     </button>
-                    <button @click="publishInvoice" type="submit" class="green">
+                    <button
+                        v-if="!editInvoice"
+                        @click="publishInvoice"
+                        type="submit"
+                        class="green"
+                    >
                         Publish
+                    </button>
+                    <button v-if="editInvoice" type="submit" class="purple">
+                        Update Invoice
                     </button>
                 </div>
             </div>
@@ -209,11 +226,12 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
+import { mapActions, mapMutations, mapState } from 'vuex'
 import { uid } from 'uid'
 import db from '../firebase/firebaseInit'
-import { collection, doc, setDoc } from 'firebase/firestore'
-import Loading from '../components/Loading'
+import { collection, doc, setDoc, updateDoc } from 'firebase/firestore'
+import Loading from '../components/Loading.vue'
+
 export default {
     name: 'InvoiceModal',
     data() {
@@ -243,12 +261,39 @@ export default {
             invoiceTotal: 0,
         }
     },
+    components: {
+        Loading,
+    },
     created() {
-        this.invoiceDateUnix = Date.now()
-        this.invoiceDate = new Date(this.invoiceDateUnix).toLocaleDateString(
-            'en-us',
-            this.dateOptions,
-        )
+        if (!this.editInvoice) {
+            this.invoiceDateUnix = Date.now()
+            this.invoiceDate = new Date(
+                this.invoiceDateUnix,
+            ).toLocaleDateString('en-us', this.dateOptions)
+        } else {
+            const editInvoiceData = this.currentInvoice
+            this.docId = editInvoiceData.docId
+            this.billerStreetAddress = editInvoiceData.billerStreetAddress
+            this.billerCity = editInvoiceData.billerCity
+            this.billerZipCode = editInvoiceData.billerZipCode
+            this.billerCountry = editInvoiceData.billerCountry
+            this.clientName = editInvoiceData.clientName
+            this.clientEmail = editInvoiceData.clientEmail
+            this.clientStreetAddress = editInvoiceData.clientStreetAddress
+            this.clientCity = editInvoiceData.clientCity
+            this.clientZipCode = editInvoiceData.clientZipCode
+            this.clientCountry = editInvoiceData.clientCountry
+            this.invoiceDateUnix = editInvoiceData.invoiceDateUnix
+            this.invoiceDate = editInvoiceData.invoiceDate
+            this.paymentTerms = editInvoiceData.paymentTerms
+            this.paymentDueDateUnix = editInvoiceData.paymentDueDateUnix
+            this.paymentDueDate = editInvoiceData.paymentDueDate
+            this.productDescription = editInvoiceData.productDescription
+            this.invoicePending = editInvoiceData.invoicePending
+            this.invoiceDraft = editInvoiceData.invoiceDraft
+            this.invoiceItemList = editInvoiceData.invoiceItemList
+            this.invoiceTotal = editInvoiceData.invoiceTotal
+        }
     },
     watch: {
         paymentTerms() {
@@ -261,10 +306,26 @@ export default {
             ).toLocaleDateString('en-us', this.dateOptions)
         },
     },
+    computed: {
+        ...mapState(['editInvoice', 'currentInvoice']),
+    },
     methods: {
-        ...mapMutations(['TOGGLE_INVOICE']),
+        ...mapMutations([
+            'TOGGLE_INVOICE',
+            'TOGGLE_MODAL',
+            'TOGGLE_EDIT_INVOICE',
+        ]),
+        ...mapActions(['UPDATE_INVOICE', 'GET_INVOICES']),
+        checkClick(e) {
+            if (e.target == this.$refs.invoiceWrap) {
+                this.TOGGLE_MODAL()
+            }
+        },
         closeInvoice() {
             this.TOGGLE_INVOICE()
+            if (this.editInvoice) {
+                this.TOGGLE_EDIT_INVOICE()
+            }
         },
         addNewInvoiceItem() {
             this.invoiceItemList.push({
@@ -282,7 +343,7 @@ export default {
         },
         calcInvoiceTotal() {
             this.invoiceTotal = this.invoiceItemList.reduce(
-                (acc, item) => acc + item,
+                (acc, item) => acc + item.total,
                 0,
             )
         },
@@ -297,12 +358,10 @@ export default {
                 alert('Please ensure you fill out work items!')
                 return
             }
+            this.loading = true
             this.calcInvoiceTotal()
 
-            console.log('started')
-
-            const dataBase = doc(collection(db, "invoices"))
-            // const dataBase = db.collection("invoices").doc()
+            const dataBase = doc(collection(db, 'invoices'))
 
             await setDoc(dataBase, {
                 invoiceId: uid(6),
@@ -328,12 +387,54 @@ export default {
                 invoiceDraft: this.invoiceDraft,
                 invoicePaid: null,
             })
+            this.loading = false
 
-            console.log('uploaded')
             this.TOGGLE_INVOICE()
         },
+        async updateInvoice() {
+            if (this.invoiceItemList.length <= 0) {
+                alert('Please ensure you fill out work items!')
+                return
+            }
+            this.loading = true
+            this.calcInvoiceTotal()
+
+            const dataBaseRef = doc(db, 'invoices', this.docId)
+
+            await updateDoc(dataBaseRef, {
+                billerStreetAddress: this.billerStreetAddress,
+                billerCity: this.billerCity,
+                billerZipCode: this.billerZipCode,
+                billerCountry: this.billerCountry,
+                clientName: this.clientName,
+                clientEmail: this.clientEmail,
+                clientStreetAddress: this.clientStreetAddress,
+                clientCity: this.clientCity,
+                clientZipCode: this.clientZipCode,
+                clientCountry: this.clientCountry,
+                paymentTerms: this.paymentTerms,
+                paymentDueDate: this.paymentDueDate,
+                paymentDueDateUnix: this.paymentDueDateUnix,
+                productDescription: this.productDescription,
+                invoiceItemList: this.invoiceItemList,
+                invoiceTotal: this.invoiceTotal,
+            })
+
+            this.loading = false
+
+            const data = {
+                docId: this.docId,
+                routeId: this.$route.params.invoiceId,
+            }
+            this.UPDATE_INVOICE(data)
+        },
         submitForm() {
+            if (this.editInvoice) {
+                this.updateInvoice(this.invoice)
+                return
+            }
             this.uploadInvoice()
+            this.GET_INVOICES()
         },
     },
 }
@@ -347,7 +448,7 @@ export default {
     width: 100%;
     height: 100vh;
     overflow: scroll;
-    z-index: 99;
+    z-index: 2;
     &::-webkit-scrollbar {
         display: none;
     }
@@ -415,9 +516,6 @@ export default {
                     .table-items {
                         gap: 8px;
                         font-size: 12px;
-                        input {
-                            padding-left: 15px;
-                        }
 
                         .item-name {
                             flex-basis: 50%;
@@ -500,7 +598,7 @@ export default {
         background-color: #1e2139;
         color: #fff;
         border-radius: 4px;
-        padding: 12px 4px;
+        padding: 12px;
         border: none;
 
         &:focus {

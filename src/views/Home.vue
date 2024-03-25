@@ -4,17 +4,22 @@
         <div class="header flex">
             <div class="left flex flex-column">
                 <h1>Invoices</h1>
-                <span>There are 4 total invoices.</span>
+                <span>There are {{ filteredData.length }} total invoices.</span>
             </div>
             <div class="right flex">
                 <div @click="toggleFilterMenu" class="filter flex" ref="filter">
-                    <span>Filter by status</span>
+                    <span
+                        >Filter by status
+                        <span v-if="filterStatus"
+                            >: {{ filterStatus }}</span
+                        ></span
+                    >
                     <img src="../assets/icon-arrow-down.svg" alt="Arrow Down" />
                     <ul v-show="filterMenu" class="filter-menu">
-                        <li>Draft</li>
-                        <li>Pending</li>
-                        <li>Paid</li>
-                        <li>Clear Filter</li>
+                        <li @click="filter">Draft</li>
+                        <li @click="filter">Pending</li>
+                        <li @click="filter">Paid</li>
+                        <li @click="filter">Clear Filter</li>
                     </ul>
                 </div>
                 <div @click="newInvoice" class="button flex">
@@ -25,19 +30,47 @@
                 </div>
             </div>
         </div>
+        <!-- Invoices -->
+        <div v-if="loadingInvoices">
+            <Loading />
+        </div>
+        <div v-if="invoiceData.length > 0">
+            <Invoice
+                v-for="(invoice, index) in filteredData"
+                :invoice="invoice"
+                :key="index"
+            />
+        </div>
+        <div v-if="invoiceData.length == 0" class="empty flex flex-column">
+            <img
+                src="../assets/illustration-empty.svg"
+                alt="Illustration for Empty List"
+            />
+            <h3>There is nothing here!</h3>
+            <p>
+                Create a new invoice by clicking the New Invoice button and get
+                started...
+            </p>
+        </div>
     </div>
 </template>
 
 <script>
-import { mapMutations } from 'vuex';
+import { mapMutations, mapState } from 'vuex'
+import Invoice from '../components/Invoice.vue'
+import Loading from '../components/Loading.vue'
 
 export default {
     name: 'Home',
-    components: {},
     data() {
         return {
             filterMenu: null,
+            filterStatus: null,
         }
+    },
+    components: {
+        Invoice,
+        Loading,
     },
     methods: {
         ...mapMutations(['TOGGLE_INVOICE']),
@@ -46,6 +79,31 @@ export default {
         },
         newInvoice() {
             this.TOGGLE_INVOICE()
+        },
+        filter(e) {
+            if (e.target.innerText == 'Clear the filter') {
+                this.filterStatus = null
+                return
+            }
+            this.filterStatus = e.target.innerText
+        },
+    },
+    computed: {
+        ...mapState(['invoiceData', 'loadingInvoices']),
+
+        filteredData() {
+            return this.invoiceData.filter((invoice) => {
+                switch (this.filterStatus) {
+                    case 'Draft':
+                        return invoice.invoiceDraft === true
+                    case 'Pending':
+                        return invoice.invoicePending === true
+                    case 'Paid':
+                        return invoice.invoicePaid === true
+                    default:
+                        return true
+                }
+            })
         },
     },
 }

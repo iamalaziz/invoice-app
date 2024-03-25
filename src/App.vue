@@ -1,23 +1,27 @@
 <template>
-    <div v-if="!mobile" class="app flex">
-        <Navigation />
-        <div class="app-content flex flex-column">
-            <transition name="invoice">
-                <InvoiceModal v-if="invoiceModal" />
-            </transition>
-            <router-view />
+    <div>
+        <div v-if="!mobile" class="app flex">
+            <Navigation />
+            <div class="app-content flex flex-column">
+                <Modal v-if="modal" />
+                <transition name="invoice">
+                    <InvoiceModal v-if="invoiceModal" />
+                </transition>
+                <router-view />
+            </div>
         </div>
-    </div>
-    <div v-else class="mobile-message flex flex-column">
-        <h2>Sorry, this app is not yet supported on Mobile Device.</h2>
-        <p>Please use larger screen window like laptop or tabs!</p>
+        <div v-else class="mobile-message flex flex-column">
+            <h2>Sorry, this app is not yet supported on Mobile Device.</h2>
+            <p>Please use larger screen window like laptop or tabs!</p>
+        </div>
     </div>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapActions, mapState } from 'vuex'
 import InvoiceModal from './components/InvoiceModal.vue'
 import Navigation from './components/Navigation.vue'
+import Modal from './components/Modal.vue'
 
 export default {
     data() {
@@ -28,12 +32,15 @@ export default {
     components: {
         Navigation,
         InvoiceModal,
+        Modal,
     },
     created() {
+        this.GET_INVOICES()
         this.checkScreen()
         window.addEventListener('resize', this.checkScreen)
     },
     methods: {
+        ...mapActions(['GET_INVOICES']),
         checkScreen() {
             const windowWidth = window.innerWidth
             if (windowWidth <= 750) {
@@ -44,7 +51,7 @@ export default {
         },
     },
     computed: {
-        ...mapState(['invoiceModal']),
+        ...mapState(['invoiceModal', 'modal', 'invoicesLoaded']),
     },
 }
 </script>
