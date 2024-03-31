@@ -1,68 +1,48 @@
 <template>
-    <div class="modal flex">
-        <div class="modal-content">
-            <p>
-                Are you sure you want to exit? Your changes will not be saved!
-            </p>
-            <div class="actions flex">
-                <button @click="closeModal" class="purple">Return</button>
-                <button @click="closeInvoice" class="red">Close</button>
-            </div>
-        </div>
+  <div class="modal-mask">
+    <div class="modal-container">
+      <div class="modal-header">
+        <slot name="header"></slot>
+      </div>
+      <div class="modal-body">
+        <slot name="body"></slot>
+      </div>
+      <div class="modal-footer">
+        <slot name="footer"></slot>
+      </div>
     </div>
+  </div>
 </template>
 
-<script>
-import { mapState, mapMutations } from 'vuex'
-
-export default {
-    name: 'Modal',
-    methods: {
-        ...mapMutations(['TOGGLE_MODAL', 'TOGGLE_INVOICE', 'TOGGLE_EDIT_INVOICE']),
-
-        closeModal() {
-            this.TOGGLE_MODAL()
-        },
-
-        closeInvoice() {
-            this.TOGGLE_MODAL()
-            this.TOGGLE_INVOICE()
-            if(this.editInvoice){
-                this.TOGGLE_EDIT_INVOICE()
-            }
-        },
-    },
-    computed: {
-        ...mapState(['editInvoice']),
-    },
-}
-</script>
-
 <style lang="scss" scoped>
-.modal {
-    z-index: 100;
-    position: fixed;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100%;
+.modal-mask {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-    .modal-content {
-        border-radius: 20px;
-        padding: 48px 32px;
-        max-width: 450px;
-        background-color: #252945;
-        color: #fff;
-        p {
-            text-align: center;
-        }
+.modal-container {
+  max-width: 480px;
+  padding: 40px;
+  background-color: var(--background-box-color);
+  border-radius: 10px;
+}
 
-        .actions {
-            margin-top: 24px;
-            button {
-                flex: 1;
-            }
-        }
-    }
+.modal-body {
+  margin: 20px 0;
+  color: var(--font-color-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  text-align: right;
 }
 </style>

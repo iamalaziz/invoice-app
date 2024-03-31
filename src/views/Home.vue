@@ -1,215 +1,174 @@
 <template>
-    <div class="home container">
-        <!-- Header -->
-        <div class="header flex">
-            <div class="left flex flex-column">
+    <div class="container">
+        <div :class="{ 'modal-overlay': newInvoice }">
+            <transition name="invoice-modal">
+                <invoice-modal v-if="newInvoice" @close="toggleInvoiceModal" />
+            </transition>
+        </div>
+        <div class="header">
+            <div class="header__invoices">
                 <h1>Invoices</h1>
-                <span>There are {{ filteredData.length }} total invoices.</span>
+                <p class="header__invoices__total">
+                    There are {{ invoices.length }} total invoices
+                </p>
+                <p class="header__invoices__total--short">
+                    {{ invoices.length }} invoices
+                </p>
             </div>
-            <div class="right flex">
-                <div @click="toggleFilterMenu" class="filter flex" ref="filter">
-                    <span
-                        >Filter by status
-                        <span v-if="filterStatus"
-                            >: {{ filterStatus }}</span
-                        ></span
-                    >
-                    <img src="../assets/icon-arrow-down.svg" alt="Arrow Down" />
-                    <ul v-show="filterMenu" class="filter-menu">
-                        <li @click="filter">Draft</li>
-                        <li @click="filter">Pending</li>
-                        <li @click="filter">Paid</li>
-                        <li @click="filter">Clear Filter</li>
-                    </ul>
-                </div>
-                <div @click="newInvoice" class="button flex">
-                    <div class="inner-button flex">
-                        <img src="../assets/icon-plus.svg" alt="Plus Button" />
-                    </div>
-                    <span>New Invoice</span>
-                </div>
+            <div class="header__filter">
+                <filter-by-status @get-statuses="changeStatuses" />
             </div>
+            <button
+                class="header__button btn btn--purple"
+                type="button"
+                @click="toggleInvoiceModal"
+            >
+                <img src="../assets/icon-plus.svg" alt="add icon" />New Invoice
+            </button>
         </div>
-        <!-- Invoices -->
-        <div v-if="loadingInvoices">
-            <Loading />
-        </div>
-        <div v-if="invoiceData.length > 0">
-            <Invoice
-                v-for="(invoice, index) in filteredData"
-                :invoice="invoice"
-                :key="index"
-            />
-        </div>
-        <div v-if="invoiceData.length == 0" class="empty flex flex-column">
-            <img
-                src="../assets/illustration-empty.svg"
-                alt="Illustration for Empty List"
-            />
-            <h3>There is nothing here!</h3>
-            <p>
-                Create a new invoice by clicking the New Invoice button and get
-                started...
-            </p>
-        </div>
+        <invoices-list :invoices="filteredInvoices" :error="error" />
     </div>
 </template>
 
 <script>
-import { mapMutations, mapState } from 'vuex'
-import Invoice from '../components/Invoice.vue'
-import Loading from '../components/Loading.vue'
+import InvoiceModal from '../components/InvoiceModal.vue'
+import InvoicesList from '../components/InvoicesList.vue'
+import FilterByStatus from '../components/FilterByStatus.vue'
+import getCollection from '../utils/getCollection'
+import getUser from '../utils/getUser'
+
+import { computed, ref } from 'vue'
 
 export default {
     name: 'Home',
-    data() {
-        return {
-            filterMenu: null,
-            filterStatus: null,
-        }
-    },
-    components: {
-        Invoice,
-        Loading,
-    },
-    methods: {
-        ...mapMutations(['TOGGLE_INVOICE']),
-        toggleFilterMenu() {
-            this.filterMenu = !this.filterMenu
-        },
-        newInvoice() {
-            this.TOGGLE_INVOICE()
-        },
-        filter(e) {
-            if (e.target.innerText == 'Clear the filter') {
-                this.filterStatus = null
-                return
-            }
-            this.filterStatus = e.target.innerText
-        },
-    },
-    computed: {
-        ...mapState(['invoiceData', 'loadingInvoices']),
+    components: { InvoiceModal, InvoicesList, FilterByStatus },
+    setup() {
+        const newInvoice = ref(false)
+        const { user } = getUser()
+        const { invoices, error } = getCollection('invoices', 'timestamp', [
+            'userId',
+            '==',
+            user.value.uid,
+        ])
+        const checkedStatuses = ref([])
 
-        filteredData() {
-            return this.invoiceData.filter((invoice) => {
-                switch (this.filterStatus) {
-                    case 'Draft':
-                        return invoice.invoiceDraft === true
-                    case 'Pending':
-                        return invoice.invoicePending === true
-                    case 'Paid':
-                        return invoice.invoicePaid === true
-                    default:
-                        return true
-                }
-            })
-        },
+        const toggleInvoiceModal = () => {
+            newInvoice.value = !newInvoice.value
+        }
+
+        const changeStatuses = (statuses) => {
+            checkedStatuses.value = statuses
+        }
+
+        const filteredInvoices = computed(() => {
+            if (checkedStatuses.value.length == 0) return invoices.value
+
+            return invoices.value.filter((invoice) =>
+                checkedStatuses.value.includes(invoice.invoiceStatus),
+            )
+        })
+
+        return {
+            newInvoice,
+            toggleInvoiceModal,
+            invoices,
+            error,
+            checkedStatuses,
+            filteredInvoices,
+            changeStatuses,
+        }
     },
 }
 </script>
 
 <style lang="scss" scoped>
-.home {
-    color: #fff;
+.modal-overlay {
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-    .header {
-        margin-bottom: 65px;
+.invoice-modal-enter-active,
+.invoice-modal-leave-active {
+    transition: 0.4s ease all;
+}
+.invoice-modal-enter-from,
+.invoice-modal-leave-to {
+    transform: translateX(-660px);
+}
 
-        .left,
-        .right {
-            flex: 1;
+.container {
+    margin: 0 auto;
+    padding: 20px;
+    max-width: 700px;
+    width: 100%;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 120px;
+    margin-bottom: 50px;
+
+    @media (min-width: 900px) {
+        margin: 50px 0;
+    }
+
+    &__button {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        padding: 10px 15px 10px 10px;
+
+        & img {
+            background-color: #fff;
+            border-radius: 50%;
+            padding: 10px;
+        }
+    }
+
+    &__invoices {
+        flex: 2;
+
+        h1 {
+            font-weight: 700;
+            font-size: 1.1rem;
+
+            @media (min-width: 700px) {
+                font-size: 2rem;
+            }
         }
 
-        .right {
-            justify-content: flex-end;
-            align-items: center;
+        p {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
 
-            .button,
-            .filter {
-                align-items: center;
+        &__total {
+            display: none;
 
-                span {
-                    font-size: 12px;
-                }
+            @media (min-width: 900px) {
+                display: block;
             }
 
-            .filter {
-                position: relative;
-                margin-right: 40px;
-                cursor: pointer;
-
-                img {
-                    margin-left: 12px;
-                    width: 9px;
-                    height: 5px;
-                }
-
-                .filter-menu {
-                    width: 120px;
-                    position: absolute;
-                    top: 25px;
-                    list-style: none;
-                    background-color: #1e2139;
-                    box-shadow:
-                        0 4px 6px -1px rgba(0, 0, 0, 0.1),
-                        0 2px 4px -1px rgba(0, 0, 0, 0.06);
-
-                    li {
-                        cursor: pointer;
-                        font-size: 12px;
-                        padding: 10px 20px;
-
-                        &:hover {
-                            color: #1e2139;
-                            background-color: #fff;
-                        }
-                    }
-                }
-            }
-
-            .button {
-                padding: 8px 10px;
-                background-color: #7c5dfa;
-                border-radius: 40px;
-
-                .inner-button {
-                    margin-right: 8px;
-                    border-radius: 50%;
-                    padding: 8px;
-                    align-items: center;
-                    justify-content: center;
-                    background-color: #fff;
-                    img {
-                        width: 10px;
-                        height: 10px;
-                    }
+            &--short {
+                @media (min-width: 900px) {
+                    display: none;
                 }
             }
         }
     }
 
-    .empty {
-        margin-top: 160px;
-        align-items: center;
-
-        img {
-            width: 214px;
-            height: 200px;
-        }
-
-        h3 {
-            font-size: 20px;
-            margin-top: 40px;
-        }
-
-        p {
-            text-align: center;
-            max-width: 224px;
-            font-size: 12px;
-            font-weight: 300;
-            margin-top: 16px;
-        }
+    &__filter {
+        flex: 1;
     }
 }
 </style>

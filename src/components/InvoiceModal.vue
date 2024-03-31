@@ -1,608 +1,665 @@
 <template>
-    <div
-        @click="checkClick"
-        ref="invoiceWrap"
-        class="invoice-wrap flex flex-column"
-    >
-        <form @submit.prevent="submitForm" class="invoice-content">
-            <Loading v-if="loading" />
-            <h1 v-if="!editInvoice">New Invoice</h1>
-            <h1 v-else>Edit Invoice</h1>
-            <!-- Bill From -->
-            <div class="bill-from flex flex-column">
-                <h4 class>Bill From</h4>
-                <div class="input flex flex-column">
+    <div class="modal-wrapper">
+        <form class="modal-inner" @submit.prevent="handleSubmit">
+            <h2 v-if="!editInvoice">New Invoice</h2>
+            <h2 v-else>Edit #{{ currentInvoice.id }}</h2>
+            <fieldset class="modal-inner__bill-from">
+                <legend>Bill From</legend>
+                <div>
                     <label for="billerStreetAddress">Street Address</label>
                     <input
-                        required
                         type="text"
                         id="billerStreetAddress"
                         v-model="billerStreetAddress"
+                        :required="isRequired"
                     />
                 </div>
-                <div class="location-details flex">
-                    <div class="input flex flex-column">
-                        <label for="billerCity">City</label>
-                        <input
-                            required
+                <div class="modal-inner__one-block-items">
+                    <div>
+                        <label for="billerCity">City</label
+                        ><input
                             type="text"
                             id="billerCity"
                             v-model="billerCity"
+                            :required="isRequired"
                         />
                     </div>
-                    <div class="input flex flex-column">
-                        <label for="billerZipCode">Zip Code</label>
+                    <div>
+                        <label for="billerPostCode">Post Code</label>
                         <input
-                            required
                             type="text"
-                            id="billerZipCode"
-                            v-model="billerZipCode"
+                            id="billerPostCode"
+                            v-model="billerPostCode"
+                            :required="isRequired"
                         />
                     </div>
-                    <div class="input flex flex-column">
+                    <div>
                         <label for="billerCountry">Country</label>
                         <input
-                            required
                             type="text"
                             id="billerCountry"
                             v-model="billerCountry"
+                            :required="isRequired"
                         />
                     </div>
                 </div>
-            </div>
-            <!-- Bill To -->
-            <div class="bill-to flex flex-column">
-                <h4 class>Bill To</h4>
-
-                <div class="input flex flex-column">
+            </fieldset>
+            <fieldset class="modal-inner__bill-to">
+                <legend>Bill To</legend>
+                <div>
                     <label for="clientName">Client's Name</label>
                     <input
-                        required
                         type="text"
                         id="clientName"
                         v-model="clientName"
+                        :required="isRequired"
                     />
-                </div>
-                <div class="input flex flex-column">
                     <label for="clientEmail">Client's Email</label>
                     <input
-                        required
-                        type="text"
+                        type="email"
                         id="clientEmail"
                         v-model="clientEmail"
+                        :required="isRequired"
                     />
-                </div>
-                <div class="input flex flex-column">
                     <label for="clientStreetAddress">Street Address</label>
                     <input
-                        required
                         type="text"
                         id="clientStreetAddress"
                         v-model="clientStreetAddress"
+                        :required="isRequired"
                     />
                 </div>
-                <div class="location-details flex">
-                    <div class="input flex flex-column">
-                        <label for="clientCity">City</label>
-                        <input
-                            required
+                <div class="modal-inner__one-block-items">
+                    <div>
+                        <label for="clientCity">City</label
+                        ><input
                             type="text"
                             id="clientCity"
                             v-model="clientCity"
+                            :required="isRequired"
                         />
                     </div>
-                    <div class="input flex flex-column">
-                        <label for="clientZipCode">Zip Code</label>
+                    <div>
+                        <label for="clientPostCode">Post Code</label>
                         <input
-                            required
                             type="text"
-                            id="clientZipCode"
-                            v-model="clientZipCode"
+                            id="clientPostCode"
+                            v-model="clientPostCode"
+                            :required="isRequired"
                         />
                     </div>
-                    <div class="input flex flex-column">
+                    <div>
                         <label for="clientCountry">Country</label>
                         <input
-                            required
                             type="text"
                             id="clientCountry"
                             v-model="clientCountry"
+                            :required="isRequired"
                         />
                     </div>
                 </div>
-            </div>
-            <!-- Invoice Work Details -->
-            <div class="invoice-work flex flex-column">
-                <div class="payment flex">
-                    <div class="input flex flex-column">
-                        <label for="invoiceDate">Invoice Date</label>
+                <div class="modal-inner__one-block-items">
+                    <div class="modal-inner__invoice-date">
+                        <label for="invoiceDate">Invoice Date </label>
                         <input
-                            disabled
                             type="text"
                             id="invoiceDate"
                             v-model="invoiceDate"
-                        />
-                    </div>
-                    <div class="input flex flex-column">
-                        <label for="paymentDueDate">Payment Due</label>
-                        <input
                             disabled
-                            type="text"
-                            id="paymentDueDate"
-                            v-model="paymentDueDate"
                         />
                     </div>
+                    <div class="modal-inner__payment-terms">
+                        <label for="paymentTerms">Payment Terms</label>
+                        <select id="paymentTerms" v-model="paymentTerms">
+                            <option value="1">Net 1 Day</option>
+                            <option value="7">Net 7 Days</option>
+                            <option value="14">Net 14 Days</option>
+                            <option value="30">Net 30 Days</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="input flex flex-column">
-                    <label for="paymentTerms">Payment Terms</label>
-                    <select required id="paymentTerms" v-model="paymentTerms">
-                        <option value="30">Next 30 days</option>
-                        <option value="60">Next 60 days</option>
-                    </select>
-                </div>
-                <div class="input flex flex-column">
-                    <label for="productDescription">Product Description</label>
+                <div>
+                    <label for="projectDescription">Project Description</label>
                     <input
-                        required
                         type="text"
-                        id="productDescription"
-                        v-model="productDescription"
+                        id="projectDescription"
+                        v-model="projectDescription"
+                        :required="isRequired"
                     />
                 </div>
-                <div class="work-items">
-                    <h3>Item List</h3>
-                    <table class="item-list">
-                        <tr class="table-heading flex">
-                            <th class="item-name">Item Name</th>
-                            <th class="qty">Qty</th>
-                            <th class="price">Price</th>
-                            <th class="total">Total</th>
-                        </tr>
-                        <tr
-                            class="table-items flex"
-                            v-for="(item, index) in invoiceItemList"
-                            :key="index"
-                        >
-                            <td class="item-name">
-                                <input type="text" v-model="item.itemName" />
-                            </td>
-                            <td class="qty">
-                                <input type="text" v-model="item.qty" />
-                            </td>
-                            <td class="price">
-                                <input type="text" v-model="item.price" />
-                            </td>
-                            <td class="total">
-                                ${{ (item.total = item.price * item.qty) }}
-                            </td>
-                            <img
-                                @click="deleteInvoiceItem(item.id)"
-                                src="../assets/icon-delete.svg"
-                                alt="delete button"
-                            />
-                        </tr>
-                    </table>
-                    <div @click="addNewInvoiceItem" class="flex button">
-                        <img
-                            src="../assets/icon-plus.svg"
-                            alt="Add New Invoice Button"
+            </fieldset>
+            <fieldset class="modal-inner__item-list">
+                <legend>Item List</legend>
+                <div
+                    class="modal-inner__one-block-items"
+                    v-for="(item, index) in invoiceItemList"
+                    :key="index"
+                >
+                    <div>
+                        <label for="itemName">Item Name</label>
+                        <input
+                            type="text"
+                            id="itemName"
+                            v-model="item.itemName"
+                            :required="isRequired"
                         />
-                        Add New Item
                     </div>
+                    <div>
+                        <label for="itemQty">Qty.</label>
+                        <input
+                            type="number"
+                            id="itemQty"
+                            min="0"
+                            v-model="item.qty"
+                            :required="isRequired"
+                        />
+                    </div>
+                    <div>
+                        <label for="itemPrice">Price</label>
+                        <input
+                            type="number"
+                            min="0"
+                            id="itemPrice"
+                            v-model="item.price"
+                            :required="isRequired"
+                        />
+                    </div>
+                    <div class="modal-inner__item-list-total">
+                        <label for="itemTotal">Total</label>
+                        <input
+                            type="text"
+                            id="itemTotal"
+                            :placeholder="`${(item.total = item.qty * item.price)}`"
+                            disabled
+                        />
+                    </div>
+                    <button type="button" class="modal-inner__delete-item">
+                        <img
+                            src="../assets/icon-delete.svg"
+                            alt="delete icon"
+                            @click="deleteItem(item.id)"
+                        />
+                    </button>
                 </div>
+                <div class="form-wrapper__error" v-if="invoiceItemListError">
+                    You must add at least one item
+                </div>
+                <button
+                    class="btn btn--light-gray"
+                    :class="{ 'btn--error': invoiceItemListError }"
+                    type="button"
+                    @click="addItem"
+                >
+                    + Add New Item
+                </button>
+            </fieldset>
+            <div v-if="!editInvoice" class="modal-inner__buttons">
+                <button
+                    class="btn btn--light-gray"
+                    type="button"
+                    @click="$emit('close')"
+                >
+                    Discard
+                </button>
+                <button class="btn btn--dark-grayish-blue" @click="saveDraft">
+                    Save as Draft
+                </button>
+                <button class="btn btn--purple" @click="savePending">
+                    Save & Send
+                </button>
             </div>
-
-            <!-- Save/Exit Buttons -->
-            <div class="save flex">
-                <div class="left">
-                    <button type="button" @click="closeInvoice" class="red">
-                        Cancel
-                    </button>
-                </div>
-                <div class="right flex">
-                    <button
-                        v-if="!editInvoice"
-                        @click="saveDraft"
-                        type="submit"
-                        class="dark-purple"
-                    >
-                        Save Draft
-                    </button>
-                    <button
-                        v-if="!editInvoice"
-                        @click="publishInvoice"
-                        type="submit"
-                        class="green"
-                    >
-                        Publish
-                    </button>
-                    <button v-if="editInvoice" type="submit" class="purple">
-                        Update Invoice
-                    </button>
-                </div>
+            <div v-else class="modal-inner__buttons modal-inner__buttons--edit">
+                <button
+                    class="btn btn--light-gray"
+                    type="button"
+                    @click="$emit('close')"
+                >
+                    Cancel
+                </button>
+                <button class="btn btn--purple" @click="saveChanges">
+                    Save Changes
+                </button>
             </div>
         </form>
     </div>
 </template>
 
 <script>
-import { mapActions, mapMutations, mapState } from 'vuex'
-import { uid } from 'uid'
-import db from '../firebase/firebaseInit'
-import { collection, doc, setDoc, updateDoc } from 'firebase/firestore'
-import Loading from '../components/Loading.vue'
+import { ref, watchEffect } from 'vue'
+import useCollection from '../utils/useCollection'
+import getUser from '../utils/getUser'
+import { timestamp } from '../firebase/config'
+import useDocument from '../utils/useDocument'
 
 export default {
     name: 'InvoiceModal',
-    data() {
-        return {
-            dateOptions: { year: 'numeric', month: 'short', day: 'numeric' },
-            docId: null,
-            loading: null,
-            billerStreetAddress: null,
-            billerCity: null,
-            billerZipCode: null,
-            billerCountry: null,
-            clientName: null,
-            clientEmail: null,
-            clientStreetAddress: null,
-            clientCity: null,
-            clientZipCode: null,
-            clientCountry: null,
-            invoiceDateUnix: null,
-            invoiceDate: null,
-            paymentTerms: null,
-            paymentDueDateUnix: null,
-            paymentDueDate: null,
-            productDescription: null,
-            invoicePending: null,
-            invoiceDraft: null,
-            invoiceItemList: [],
-            invoiceTotal: 0,
+    props: ['edit', 'invoice'],
+    setup(props, { emit }) {
+        const billerStreetAddress = ref(null)
+        const billerCity = ref(null)
+        const billerPostCode = ref(null)
+        const billerCountry = ref(null)
+        const clientName = ref(null)
+        const clientEmail = ref(null)
+        const clientStreetAddress = ref(null)
+        const clientCity = ref(null)
+        const clientPostCode = ref(null)
+        const clientCountry = ref(null)
+        const invoiceDate = ref(
+            new Date().toLocaleDateString('en-GB', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            }),
+        )
+        const paymentTerms = ref('1')
+        const paymentDue = ref(null)
+        const projectDescription = ref(null)
+        const invoiceItemList = ref([])
+        const invoiceStatus = ref(null)
+        const isRequired = ref(false)
+        const { user } = getUser()
+        const invoiceItemListError = ref(null)
+        const invoiceTotal = ref(null)
+        const editInvoice = ref(props.edit === undefined ? false : props.edit)
+        const currentInvoice = ref(
+            props.invoice === undefined
+                ? null
+                : JSON.parse(JSON.stringify(props.invoice)),
+        )
+
+        const createId = () => {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            const letters = [...alphabet]
+                .map(
+                    () => alphabet[Math.floor(Math.random() * alphabet.length)],
+                )
+                .slice(0, 2)
+                .join('')
+            const digits = (Math.floor(Math.random() * 10000) + 10000)
+                .toString()
+                .substring(1)
+
+            return letters + digits
         }
-    },
-    components: {
-        Loading,
-    },
-    created() {
-        if (!this.editInvoice) {
-            this.invoiceDateUnix = Date.now()
-            this.invoiceDate = new Date(
-                this.invoiceDateUnix,
-            ).toLocaleDateString('en-us', this.dateOptions)
-        } else {
-            const editInvoiceData = this.currentInvoice
-            this.docId = editInvoiceData.docId
-            this.billerStreetAddress = editInvoiceData.billerStreetAddress
-            this.billerCity = editInvoiceData.billerCity
-            this.billerZipCode = editInvoiceData.billerZipCode
-            this.billerCountry = editInvoiceData.billerCountry
-            this.clientName = editInvoiceData.clientName
-            this.clientEmail = editInvoiceData.clientEmail
-            this.clientStreetAddress = editInvoiceData.clientStreetAddress
-            this.clientCity = editInvoiceData.clientCity
-            this.clientZipCode = editInvoiceData.clientZipCode
-            this.clientCountry = editInvoiceData.clientCountry
-            this.invoiceDateUnix = editInvoiceData.invoiceDateUnix
-            this.invoiceDate = editInvoiceData.invoiceDate
-            this.paymentTerms = editInvoiceData.paymentTerms
-            this.paymentDueDateUnix = editInvoiceData.paymentDueDateUnix
-            this.paymentDueDate = editInvoiceData.paymentDueDate
-            this.productDescription = editInvoiceData.productDescription
-            this.invoicePending = editInvoiceData.invoicePending
-            this.invoiceDraft = editInvoiceData.invoiceDraft
-            this.invoiceItemList = editInvoiceData.invoiceItemList
-            this.invoiceTotal = editInvoiceData.invoiceTotal
+
+        const { error, addDoc } = useCollection('invoices', createId())
+
+        if (editInvoice.value) {
+            ;(billerStreetAddress.value =
+                currentInvoice.value.billerStreetAddress),
+                (billerCity.value = currentInvoice.value.billerCity),
+                (billerPostCode.value = currentInvoice.value.billerPostCode),
+                (billerCountry.value = currentInvoice.value.billerCountry),
+                (clientName.value = currentInvoice.value.clientName),
+                (clientEmail.value = currentInvoice.value.clientEmail),
+                (clientStreetAddress.value =
+                    currentInvoice.value.clientStreetAddress),
+                (clientCity.value = currentInvoice.value.clientCity),
+                (clientPostCode.value = currentInvoice.value.clientPostCode),
+                (clientCountry.value = currentInvoice.value.clientCountry),
+                (invoiceDate.value = currentInvoice.value.invoiceDate),
+                (paymentTerms.value = currentInvoice.value.paymentTerms),
+                (paymentDue.value = currentInvoice.value.paymentDue),
+                (projectDescription.value =
+                    currentInvoice.value.projectDescription),
+                (invoiceItemList.value = currentInvoice.value.invoiceItemList),
+                (invoiceTotal.value = currentInvoice.value.invoiceTotal)
         }
-    },
-    watch: {
-        paymentTerms() {
-            const futureDate = new Date()
-            this.paymentDueDateUnix = futureDate.setDate(
-                futureDate.getDate() + parseInt(this.paymentTerms),
-            )
-            this.paymentDueDate = new Date(
-                this.paymentDueDateUnix,
-            ).toLocaleDateString('en-us', this.dateOptions)
-        },
-    },
-    computed: {
-        ...mapState(['editInvoice', 'currentInvoice']),
-    },
-    methods: {
-        ...mapMutations([
-            'TOGGLE_INVOICE',
-            'TOGGLE_MODAL',
-            'TOGGLE_EDIT_INVOICE',
-        ]),
-        ...mapActions(['UPDATE_INVOICE', 'GET_INVOICES']),
-        checkClick(e) {
-            if (e.target == this.$refs.invoiceWrap) {
-                this.TOGGLE_MODAL()
-            }
-        },
-        closeInvoice() {
-            this.TOGGLE_INVOICE()
-            if (this.editInvoice) {
-                this.TOGGLE_EDIT_INVOICE()
-            }
-        },
-        addNewInvoiceItem() {
-            this.invoiceItemList.push({
-                id: uid(),
+
+        watchEffect(() => {
+            const date = new Date(invoiceDate.value)
+            date.setDate(date.getDate() + parseInt(paymentTerms.value))
+
+            paymentDue.value = date.toLocaleDateString('en-GB', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            })
+        })
+
+        const addItem = () => {
+            invoiceItemList.value.push({
+                id: createId(),
                 itemName: '',
-                qty: '',
+                qty: 0,
                 price: 0,
                 total: 0,
             })
-        },
-        deleteInvoiceItem(id) {
-            this.invoiceItemList = this.invoiceItemList.filter(
+        }
+
+        const deleteItem = (id) => {
+            invoiceItemList.value = invoiceItemList.value.filter(
                 (item) => item.id !== id,
             )
-        },
-        calcInvoiceTotal() {
-            this.invoiceTotal = this.invoiceItemList.reduce(
+        }
+
+        const sumInvoiceTotal = () => {
+            invoiceTotal.value = invoiceItemList.value.reduce(
                 (acc, item) => acc + item.total,
                 0,
             )
-        },
-        publishInvoice() {
-            this.invoicePending = true
-        },
-        saveDraft() {
-            this.invoiceDraft = true
-        },
-        async uploadInvoice() {
-            if (this.invoiceItemList.length <= 0) {
-                alert('Please ensure you fill out work items!')
-                return
+        }
+
+        const submitInvoice = async () => {
+            if (invoiceStatus.value === 'pending') {
+                invoiceItemListError.value = false
+                if (!invoiceItemList.value.length) {
+                    invoiceItemListError.value = true
+                }
             }
-            this.loading = true
-            this.calcInvoiceTotal()
 
-            const dataBase = doc(collection(db, 'invoices'))
+            if (!invoiceItemListError.value) {
+                sumInvoiceTotal()
 
-            await setDoc(dataBase, {
-                invoiceId: uid(6),
-                billerStreetAddress: this.billerStreetAddress,
-                billerCity: this.billerCity,
-                billerZipCode: this.billerZipCode,
-                billerCountry: this.billerCountry,
-                clientName: this.clientName,
-                clientEmail: this.clientEmail,
-                clientStreetAddress: this.clientStreetAddress,
-                clientCity: this.clientCity,
-                clientZipCode: this.clientZipCode,
-                clientCountry: this.clientCountry,
-                invoiceDate: this.invoiceDate,
-                invoiceDateUnix: this.invoiceDateUnix,
-                paymentTerms: this.paymentTerms,
-                paymentDueDate: this.paymentDueDate,
-                paymentDueDateUnix: this.paymentDueDateUnix,
-                productDescription: this.productDescription,
-                invoiceItemList: this.invoiceItemList,
-                invoiceTotal: this.invoiceTotal,
-                invoicePending: this.invoicePending,
-                invoiceDraft: this.invoiceDraft,
-                invoicePaid: null,
-            })
-            this.loading = false
+                await addDoc({
+                    billerStreetAddress: billerStreetAddress.value,
+                    billerCity: billerCity.value,
+                    billerPostCode: billerPostCode.value,
+                    billerCountry: billerCountry.value,
+                    clientName: clientName.value,
+                    clientEmail: clientEmail.value,
+                    clientStreetAddress: clientStreetAddress.value,
+                    clientCity: clientCity.value,
+                    clientPostCode: clientPostCode.value,
+                    clientCountry: clientCountry.value,
+                    invoiceDate: invoiceDate.value,
+                    paymentTerms: paymentTerms.value,
+                    paymentDue: paymentDue.value,
+                    projectDescription: projectDescription.value,
+                    invoiceItemList: invoiceItemList.value,
+                    invoiceTotal: invoiceTotal.value,
+                    invoiceStatus: invoiceStatus.value,
+                    userId: user.value.uid,
+                    timestamp: timestamp,
+                })
 
-            this.TOGGLE_INVOICE()
-        },
-        async updateInvoice() {
-            if (this.invoiceItemList.length <= 0) {
-                alert('Please ensure you fill out work items!')
-                return
+                if (!error.value) {
+                    emit('close')
+                }
             }
-            this.loading = true
-            this.calcInvoiceTotal()
+        }
 
-            const dataBaseRef = doc(db, 'invoices', this.docId)
+        const saveDraft = () => {
+            isRequired.value = false
+            invoiceStatus.value = 'draft'
+        }
 
-            await updateDoc(dataBaseRef, {
-                billerStreetAddress: this.billerStreetAddress,
-                billerCity: this.billerCity,
-                billerZipCode: this.billerZipCode,
-                billerCountry: this.billerCountry,
-                clientName: this.clientName,
-                clientEmail: this.clientEmail,
-                clientStreetAddress: this.clientStreetAddress,
-                clientCity: this.clientCity,
-                clientZipCode: this.clientZipCode,
-                clientCountry: this.clientCountry,
-                paymentTerms: this.paymentTerms,
-                paymentDueDate: this.paymentDueDate,
-                paymentDueDateUnix: this.paymentDueDateUnix,
-                productDescription: this.productDescription,
-                invoiceItemList: this.invoiceItemList,
-                invoiceTotal: this.invoiceTotal,
-            })
+        const savePending = () => {
+            isRequired.value = true
+            invoiceStatus.value = 'pending'
+        }
 
-            this.loading = false
+        const saveChanges = () => {
+            isRequired.value = true
+        }
 
-            const data = {
-                docId: this.docId,
-                routeId: this.$route.params.invoiceId,
+        const updateInvoice = async () => {
+            const { updateDoc, error: updateError } = useDocument(
+                'invoices',
+                props.invoice.id,
+            )
+
+            invoiceItemListError.value = false
+            if (!invoiceItemList.value.length) {
+                invoiceItemListError.value = true
             }
-            this.UPDATE_INVOICE(data)
-        },
-        submitForm() {
-            if (this.editInvoice) {
-                this.updateInvoice(this.invoice)
-                return
+
+            if (!invoiceItemListError.value) {
+                sumInvoiceTotal()
+
+                const updates = {
+                    billerStreetAddress: billerStreetAddress.value,
+                    billerCity: billerCity.value,
+                    billerPostCode: billerPostCode.value,
+                    billerCountry: billerCountry.value,
+                    clientName: clientName.value,
+                    clientEmail: clientEmail.value,
+                    clientStreetAddress: clientStreetAddress.value,
+                    clientCity: clientCity.value,
+                    clientPostCode: clientPostCode.value,
+                    clientCountry: clientCountry.value,
+                    paymentTerms: paymentTerms.value,
+                    paymentDue: paymentDue.value,
+                    projectDescription: projectDescription.value,
+                    invoiceItemList: invoiceItemList.value,
+                    invoiceTotal: invoiceTotal.value,
+                    invoiceStatus:
+                        currentInvoice.value.invoiceStatus === 'draft'
+                            ? 'pending'
+                            : currentInvoice.value.invoiceStatus,
+                }
+                await updateDoc(updates)
+
+                if (!updateError.value) {
+                    emit('close')
+                }
             }
-            this.uploadInvoice()
-            this.GET_INVOICES()
-        },
+        }
+
+        const handleSubmit = () => {
+            if (editInvoice.value) {
+                updateInvoice()
+            } else {
+                submitInvoice()
+            }
+        }
+
+        return {
+            billerStreetAddress,
+            billerCity,
+            billerPostCode,
+            billerCountry,
+            clientName,
+            clientEmail,
+            clientStreetAddress,
+            clientCity,
+            clientPostCode,
+            clientCountry,
+            invoiceDate,
+            paymentTerms,
+            projectDescription,
+            invoiceItemList,
+            addItem,
+            deleteItem,
+            saveDraft,
+            savePending,
+            saveChanges,
+            isRequired,
+            invoiceItemListError,
+            editInvoice,
+            currentInvoice,
+            updateInvoice,
+            handleSubmit,
+        }
     },
 }
 </script>
 
 <style lang="scss" scoped>
-.invoice-wrap {
-    position: fixed;
-    top: 0;
-    left: 0;
+.modal-wrapper {
+    display: flex;
     width: 100%;
     height: 100vh;
-    overflow: scroll;
-    z-index: 2;
+    transition: opacity 0.2s ease;
+    position: absolute;
+    top: 90px;
+    z-index: 1;
+
+    @media (min-width: 900px) {
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+}
+
+.modal-inner {
+    max-width: 660px;
+    padding: 30px;
+    background-color: var(--background-modal-colar);
+    transition: all 0.2s ease-in;
+    overflow: auto;
+
     &::-webkit-scrollbar {
         display: none;
     }
-    @media (min-width: 900px) {
-        left: 90px;
+
+    & input,
+    & select {
+        font-weight: 700;
+
+        &:invalid {
+            border: 1px solid var(--error-color);
+        }
     }
 
-    .invoice-content {
-        position: relative;
-        padding: 56px;
-        max-width: 700px;
-        width: 100%;
-        background-color: #141625;
-        color: #fff;
-        box-shadow:
-            10px 4px 6px -1px rgba(0, 0, 0, 0.2),
-            0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    @media (min-width: 900px) {
+        padding: 30px 30px 30px 130px;
+    }
 
-        h1 {
-            margin-bottom: 48px;
-            color: #fff;
+    @media (min-width: 677px) {
+        border-top-right-radius: 20px;
+        border-bottom-right-radius: 20px;
+    }
+
+    &__bill-from,
+    &__bill-to {
+        border: 0;
+        margin-top: 40px;
+
+        & legend {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--button-color-primary);
+            margin-bottom: 20px;
+        }
+    }
+
+    &__one-block-items {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+
+        @media (min-width: 677px) {
+            & > * {
+                flex: 1;
+            }
+        }
+    }
+
+    &__invoice-date,
+    &__payment-terms {
+        flex: 1;
+    }
+
+    &__invoice-date input {
+        &:disabled {
+            background-color: var(--background-color);
+            color: var(--font-color-secondary);
+
+            @media (min-width: 340px) {
+                background-image: url('../assets/icon-calendar.svg');
+                background-repeat: no-repeat;
+                background-position: top 50% right 15px;
+            }
+        }
+    }
+
+    &__payment-terms {
+        & select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            position: relative;
+            background-image: url('../assets/icon-select-arrow.svg');
+            background-repeat: no-repeat;
+            background-position: top 50% right 15px;
+        }
+    }
+
+    &__item-list {
+        border: 0;
+        margin-top: 40px;
+
+        & legend {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--font-color-secondary);
+            margin-bottom: 30px;
         }
 
-        h3 {
-            margin-bottom: 16px;
-            font-size: 18px;
-            color: #777f98;
+        & button {
+            width: 100%;
+            margin: 20px 0;
         }
 
-        h4 {
-            color: #7c5dfa;
-            font-size: 12px;
-            margin-bottom: 24px;
-        }
-
-        // Bill To / Bill From
-        .bill-to,
-        .bill-from {
-            margin-bottom: 48px;
-
-            .location-details {
-                gap: 16px;
-                div {
-                    flex: 1;
-                }
+        &-total {
+            & input {
+                border: 0;
+                background: transparent;
+                padding-left: 0;
+                padding-right: 0;
             }
         }
 
-        // Invoice Work
+        & .modal-inner__one-block-items {
+            flex-wrap: wrap;
+            justify-content: space-between;
 
-        .invoice-work {
-            .payment {
-                gap: 24px;
-                div {
-                    flex: 1;
-                }
+            & > div:nth-child(1) {
+                width: 100%;
             }
 
-            .work-items {
-                .item-list {
-                    width: 100%;
-
-                    // Item Table Styling
-                    .table-heading,
-                    .table-items {
-                        gap: 8px;
-                        font-size: 12px;
-
-                        .item-name {
-                            flex-basis: 50%;
-                        }
-
-                        .qty {
-                            flex-basis: 10%;
-                        }
-
-                        .price {
-                            flex-basis: 20%;
-                        }
-
-                        .total {
-                            flex-basis: 20%;
-                            align-self: center;
-                        }
-                    }
-
-                    .table-heading {
-                        margin-bottom: 16px;
-                        th {
-                            text-align: left;
-                        }
-                    }
-
-                    .table-items {
-                        position: relative;
-                        margin-bottom: 16px;
-
-                        img {
-                            position: absolute;
-                            top: 15px;
-                            right: 0;
-                            width: 12px;
-                            height: 16px;
-                        }
-                    }
-                }
-
-                .button {
-                    color: #fff;
-                    background-color: #252945;
-                    align-items: center;
-                    justify-content: center;
-                    width: 100%;
-
-                    img {
-                        margin-right: 4px;
-                    }
-                }
-            }
-        }
-
-        .save {
-            margin-top: 60px;
-
-            div {
+            & > div:not(:first-child):not(:last-child) {
                 flex: 1;
             }
 
-            .right {
-                justify-content: flex-end;
+            @media (min-width: 677px) {
+                &:not(:nth-child(2)) label {
+                    display: none;
+                }
+                & > div:nth-child(1) {
+                    flex: 2;
+                }
+
+                & > div:nth-child(2) {
+                    flex: 0.5;
+                }
             }
         }
     }
 
-    .input {
-        margin-bottom: 24px;
+    &__delete-item {
+        border: 0;
+        background-color: transparent;
+        flex: 0;
+        padding-top: 10px;
+        cursor: pointer;
+
+        &:hover {
+            opacity: 0.7;
+        }
     }
 
-    label {
-        font-size: 12px;
-        margin-bottom: 6px;
-    }
+    &__buttons {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+        margin-bottom: 100px;
+        gap: 10px;
 
-    input,
-    select {
-        width: 100%;
-        background-color: #1e2139;
-        color: #fff;
-        border-radius: 4px;
-        padding: 12px;
-        border: none;
+        @media (min-width: 900px) {
+            margin-bottom: 0;
+        }
 
-        &:focus {
-            outline: none;
+        & button:nth-child(1) {
+            margin-right: auto;
+        }
+
+        &--edit {
+            & button:nth-child(1) {
+                margin-right: 0;
+            }
         }
     }
 }
