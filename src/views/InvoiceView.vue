@@ -1,5 +1,5 @@
 <template>
-    <div v-if="currentInvoice" class="invoice-view container">
+    <div v-if="invoice" class="invoice-view container">
         <router-link class="nav-link flex" :to="{ name: 'Home' }">
             <img src="../assets/icon-arrow-left.svg" alt="" /> Go Back
         </router-link>
@@ -10,39 +10,33 @@
                 <div
                     class="status-button flex"
                     :class="{
-                        paid: currentInvoice.invoicePaid,
-                        draft: currentInvoice.invoiceDraft,
-                        pending: currentInvoice.invoicePending,
+                        paid: invoice.invoicePaid,
+                        draft: invoice.invoiceDraft,
+                        pending: invoice.invoicePending,
                     }"
                 >
-                    <span v-if="currentInvoice.invoicePaid">Paid</span>
-                    <span v-if="currentInvoice.invoiceDraft">Draft</span>
-                    <span v-if="currentInvoice.invoicePending">Pending</span>
+                    <span v-if="invoice.invoicePaid">Paid</span>
+                    <span v-if="invoice.invoiceDraft">Draft</span>
+                    <span v-if="invoice.invoicePending">Pending</span>
                 </div>
             </div>
             <div class="right flex">
                 <button @click="toggleEditInvoice" class="dark-purple">
                     Edit
                 </button>
-                <button
-                    @click="deleteInvoice(currentInvoice.docId)"
-                    class="red"
-                >
+                <button @click="deleteInvoice(invoice.docId)" class="red">
                     Delete
                 </button>
                 <button
-                    @click="updateStatusToPaid(currentInvoice.docId)"
-                    v-if="currentInvoice.invoicePending"
+                    @click="updateStatusToPaid(invoice.docId)"
+                    v-if="invoice.invoicePending"
                     class="green"
                 >
                     Mark as Paid
                 </button>
                 <button
-                    v-if="
-                        currentInvoice.invoiceDraft ||
-                        currentInvoice.invoicePaid
-                    "
-                    @click="updateStatusToPending(currentInvoice.docId)"
+                    v-if="invoice.invoiceDraft || invoice.invoicePaid"
+                    @click="updateStatusToPending(invoice.docId)"
                     class="orange"
                 >
                     Mark as Pending
@@ -54,40 +48,40 @@
         <div class="invoice-details flex flex-column">
             <div class="top flex">
                 <div class="left flex flex-column">
-                    <p><span>#</span>{{ currentInvoice.invoiceId }}</p>
-                    <p>{{ currentInvoice.productDescription }}</p>
+                    <p><span>#</span>{{ invoice.invoiceId }}</p>
+                    <p>{{ invoice.productDescription }}</p>
                 </div>
                 <div class="right flex flex-column">
-                    <p>{{ currentInvoice.billerStreetAddress }}</p>
-                    <p>{{ currentInvoice.billerCity }}</p>
-                    <p>{{ currentInvoice.billerZipCode }}</p>
-                    <p>{{ currentInvoice.billerCountry }}</p>
+                    <p>{{ invoice.billerStreetAddress }}</p>
+                    <p>{{ invoice.billerCity }}</p>
+                    <p>{{ invoice.billerZipCode }}</p>
+                    <p>{{ invoice.billerCountry }}</p>
                 </div>
             </div>
             <div class="middle flex">
                 <div class="payment flex flex-column">
                     <h4>Invoice Date</h4>
                     <p>
-                        {{ currentInvoice.invoiceDate }}
+                        {{ invoice.invoiceDate }}
                     </p>
                     <h4>Payment Date</h4>
                     <p>
-                        {{ currentInvoice.paymentDueDate }}
+                        {{ invoice.paymentDueDate }}
                     </p>
                 </div>
                 <div class="bill flex flex-column">
                     <h4>Bill To</h4>
-                    <p class="client">{{ currentInvoice.clientName }}</p>
+                    <p class="client">{{ invoice.clientName }}</p>
                     <div class="address">
-                        <p>{{ currentInvoice.clientStreetAddress }}</p>
-                        <p>{{ currentInvoice.clientCity }}</p>
-                        <p>{{ currentInvoice.clientZipCode }}</p>
-                        <p>{{ currentInvoice.clientCountry }}</p>
+                        <p>{{ invoice.clientStreetAddress }}</p>
+                        <p>{{ invoice.clientCity }}</p>
+                        <p>{{ invoice.clientZipCode }}</p>
+                        <p>{{ invoice.clientCountry }}</p>
                     </div>
                 </div>
                 <div class="send-to flex flex-column">
                     <h4>Sent To</h4>
-                    <p>{{ currentInvoice.clientEmail }}</p>
+                    <p>{{ invoice.clientEmail }}</p>
                 </div>
             </div>
             <div class="bottom flex flex-column">
@@ -99,7 +93,7 @@
                         <p>Total</p>
                     </div>
                     <div
-                        v-for="(item, index) in currentInvoice.invoiceItemList"
+                        v-for="(item, index) in invoice.invoiceItemList"
                         :key="index"
                         class="item flex"
                     >
@@ -111,7 +105,7 @@
                 </div>
                 <div class="total flex">
                     <p>Amount Due</p>
-                    <p>${{ currentInvoice.invoiceTotal }}</p>
+                    <p>${{ invoice.invoiceTotal }}</p>
                 </div>
             </div>
         </div>
@@ -123,6 +117,9 @@ import { mapState, mapMutations, mapActions } from 'vuex'
 
 export default {
     name: 'InvoiceView',
+    data() {
+        return { invoice: {} }
+    },
     created() {
         this.getCurrentInvoice()
     },
@@ -138,7 +135,13 @@ export default {
             'UPDATE_STATUS_TO_PAID',
         ]),
         getCurrentInvoice() {
+            const invoiceId = localStorage.getItem('currentInvoice')
             this.SET_CURRENT_INVOICE(this.$route.params.invoiceId)
+            this.invoice = this.currentInvoice
+            // if (invoiceId) {
+            //     this.invoice = invoiceId
+            //     console.log(this.invoice)
+            // }
         },
         toggleEditInvoice() {
             this.TOGGLE_EDIT_INVOICE()
@@ -157,7 +160,14 @@ export default {
         },
     },
     computed: {
-        ...mapState(['currentInvoice']),
+        ...mapState(['currentInvoice', 'editInvoice']),
+    },
+    watch: {
+        editInvoice() {
+            if (!this.editInvoice) {
+                this.invoice = this.currentInvoice[0]
+            }
+        },
     },
 }
 </script>

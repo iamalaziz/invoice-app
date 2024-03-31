@@ -29,9 +29,10 @@ export default createStore({
             state.invoicesLoaded = true
         },
         SET_CURRENT_INVOICE(state, payload) {
-            state.currentInvoice = state.invoiceData.filter(
-                (i) => i.invoiceId === payload,
-            )[0]
+            state.currentInvoice = state.invoiceData.find(
+                i => i.invoiceId === payload
+            )
+            // localStorage.setItem('currentInvoice', JSON.stringify(state.currentInvoice));
         },
         TOGGLE_EDIT_INVOICE(state) {
             state.editInvoice = !state.editInvoice
