@@ -30,7 +30,7 @@ export default createStore({
         },
         SET_CURRENT_INVOICE(state, payload) {
             state.currentInvoice = state.invoiceData.find(
-                i => i.invoiceId === payload
+                (i) => i.invoiceId === payload,
             )
             // localStorage.setItem('currentInvoice', JSON.stringify(state.currentInvoice));
         },

@@ -1,7 +1,7 @@
 import { ref } from 'vue'
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 // import auth from '../firebase/config'
-import { getAuth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth'
 
 const error = ref(null)
 const isPending = ref(false)
