@@ -20,4 +20,4 @@ export const db = getFirestore(app)
 export const storage = getStorage(app)
 export const timestamp = serverTimestamp()
 
-export default { auth, googleProvider, db, storage, timestamp }
+export default { auth, db, storage, timestamp }
