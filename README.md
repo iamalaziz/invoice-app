@@ -4,9 +4,22 @@
 
 The Invoice App is a simple web application built using Vite and Vue.js. It allows users to create, manage, and track invoices efficiently. With a clean and intuitive interface, users can easily input invoice details, edit them, mark them as paid, and delete them as needed.
 
+
+### Stack, Techs, Features, Tasks
+
+- Vue
+- Firebase
+- Auth (Email, Google)
+- SCSS
+- CRUD
+- Form
+- Store
+- Light/Dark Mode
+
+
 ### Demo
 
-You can find a live demo of the Invoice App [here]().
+You can find a live demo of the Invoice App [here](https://smartreceipts.netlify.app/).
 
 1. Home - List of Invoice Items
 
@@ -29,15 +42,6 @@ You can find a live demo of the Invoice App [here]().
    ![vue5-filter](https://github.com/iamalaziz/invoice-app/assets/81867375/658118b1-0771-4757-b62f-5d329526b673)
 
 
-### Stack, Techs, Features, Tasks
-
-- Vue
-- Firebase
-- SCSS
-- CRUD
-- Form
-- Store
-
 ### How To Run
 
 ```bash
@@ -52,12 +56,12 @@ npm install
 - Add your Firebase configuration details to the .env file:
 
 ```bash
-VUE_APP_FIREBASE_API_KEY=your-api-key
-VUE_APP_FIREBASE_AUTH_DOMAIN=your-auth-domain
-VUE_APP_FIREBASE_PROJECT_ID=your-project-id
-VUE_APP_FIREBASE_STORAGE_BUCKET=your-storage-bucket
-VUE_APP_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-VUE_APP_FIREBASE_APP_ID=your-app-id
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-auth-domain
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
 ```
 
 - Run the project:
