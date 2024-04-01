@@ -32,7 +32,6 @@ export default createStore({
             state.currentInvoice = state.invoiceData.find(
                 (i) => i.invoiceId === payload,
             )
-            // localStorage.setItem('currentInvoice', JSON.stringify(state.currentInvoice));
         },
         TOGGLE_EDIT_INVOICE(state) {
             state.editInvoice = !state.editInvoice

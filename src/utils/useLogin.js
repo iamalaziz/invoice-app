@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-// import { auth } from "../firebase/config";
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { getAuth } from 'firebase/auth'
 
